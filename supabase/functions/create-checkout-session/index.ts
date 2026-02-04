@@ -7,6 +7,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Allowed origins for redirect URLs to prevent open redirect attacks
+const ALLOWED_ORIGINS = [
+  'https://fintutto.de',
+  'https://www.fintutto.de',
+  'https://aaefocdqgdgexkcrjhks.supabase.co',
+  // Add preview/development URLs
+  'http://localhost:5173',
+  'http://localhost:3000',
+]
+
+// Validate that a URL is safe for redirection
+function isValidRedirectUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    // Check if origin is in allowed list or is a lovable.app preview
+    return ALLOWED_ORIGINS.includes(parsed.origin) || 
+           parsed.origin.endsWith('.lovable.app')
+  } catch {
+    return false
+  }
+}
+
+// Validate Stripe price ID format
+function isValidPriceId(priceId: string): boolean {
+  return typeof priceId === 'string' && priceId.startsWith('price_') && priceId.length > 10
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -16,7 +43,11 @@ serve(async (req) => {
   try {
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
     if (!stripeKey) {
-      throw new Error('STRIPE_SECRET_KEY not configured')
+      console.error('STRIPE_SECRET_KEY not configured')
+      return new Response(
+        JSON.stringify({ error: 'Service temporarily unavailable' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     const stripe = new Stripe(stripeKey, {
@@ -51,9 +82,27 @@ serve(async (req) => {
     const user = claimsData.user
     const { priceId, successUrl, cancelUrl } = await req.json()
 
+    // Validate required fields
     if (!priceId || !successUrl || !cancelUrl) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: priceId, successUrl, cancelUrl' }),
+        JSON.stringify({ error: 'Missing required fields' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate price ID format
+    if (!isValidPriceId(priceId)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid price ID format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate redirect URLs to prevent open redirect attacks
+    if (!isValidRedirectUrl(successUrl) || !isValidRedirectUrl(cancelUrl)) {
+      console.error('Invalid redirect URLs attempted:', { successUrl, cancelUrl })
+      return new Response(
+        JSON.stringify({ error: 'Invalid redirect URLs' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
