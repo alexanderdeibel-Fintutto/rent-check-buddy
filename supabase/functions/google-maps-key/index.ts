@@ -49,9 +49,9 @@ serve(async (req) => {
     if (!googleMapsApiKey) {
       console.error('GOOGLE_MAPS_API_KEY is not configured');
       return new Response(
-        JSON.stringify({ error: 'Google Maps API Key nicht konfiguriert' }),
+        JSON.stringify({ error: 'Service temporarily unavailable' }),
         {
-          status: 500,
+          status: 503,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );

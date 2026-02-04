@@ -24,8 +24,8 @@ serve(async (req) => {
     if (!webhookSecret) {
       console.error('STRIPE_WEBHOOK_SECRET not configured')
       return new Response(
-        JSON.stringify({ error: 'Webhook secret not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Service configuration error' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
