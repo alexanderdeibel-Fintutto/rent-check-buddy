@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProductsProvider } from "@/contexts/ProductsContext";
-import Index from "./pages/Index";
+import MieterhoehungCheck from "./pages/MieterhoehungCheck";
 import Berechnungen from "./pages/Berechnungen";
 import Pricing from "./pages/Pricing";
 import Success from "./pages/Success";
@@ -22,7 +22,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<MieterhoehungCheck />} />
               <Route path="/berechnungen" element={<Berechnungen />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/success" element={<Success />} />
